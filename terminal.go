@@ -1,9 +1,6 @@
 package brainfuck
 
-import (
-	"io"
-	"os"
-)
+import "io"
 
 type terminal struct {
 	bs []byte
@@ -17,10 +14,6 @@ func newTerminal(r io.Reader, w io.Writer) *terminal {
 		r:  r,
 		w:  w,
 	}
-}
-
-func newTerminalStd() *terminal {
-	return newTerminal(os.Stdin, os.Stdout)
 }
 
 func (t *terminal) putchar(b byte) error {

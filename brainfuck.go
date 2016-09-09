@@ -1,20 +1,38 @@
 package brainfuck
 
-import "errors"
+import (
+	"errors"
+	"io"
+	"os"
+)
 
 var (
 	ErrMissingOpenSquareBracket  = errors.New("brainfuck: missing operator [")
 	ErrMissingCloseSquareBracket = errors.New("brainfuck: missing operator ]")
 )
 
-const ramSize = 30000
+type Config struct {
+	RamSize int
+	Out     io.Writer
+	In      io.Reader
+}
+
+var Default = Config{
+	RamSize: 30000,
+	Out:     os.Stdout,
+	In:      os.Stdin,
+}
 
 func Run(code []byte) error {
+	return RunConfig(Default, code)
+}
+
+func RunConfig(c Config, code []byte) error {
 
 	code = prepareOnlyCode(code)
 
 	var (
-		ram [ramSize]byte
+		ram = make([]byte, c.RamSize)
 		pos int
 	)
 
@@ -23,15 +41,15 @@ func Run(code []byte) error {
 		return err
 	}
 
-	t := newTerminalStd()
+	t := newTerminal(c.In, c.Out)
 
 	i := 0
 	for n := len(code); i < n; {
 		switch b := code[i]; b {
 		case '>':
-			pos = rInc(pos)
+			pos = rInc(pos, c.RamSize)
 		case '<':
-			pos = rDec(pos)
+			pos = rDec(pos, c.RamSize)
 		case '+':
 			ram[pos]++
 		case '-':
@@ -92,7 +110,7 @@ func prepareOnlyCode(code []byte) []byte {
 	return code
 }
 
-func rInc(i int) int {
+func rInc(i int, ramSize int) int {
 	i++
 	if i == ramSize {
 		i = 0
@@ -100,7 +118,7 @@ func rInc(i int) int {
 	return i
 }
 
-func rDec(i int) int {
+func rDec(i int, ramSize int) int {
 	i--
 	if i < 0 {
 		i = ramSize - 1

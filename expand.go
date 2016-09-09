@@ -10,16 +10,19 @@ func Expand(code []byte, indent string) ([]byte, error) {
 	code = prepareOnlyCode(code)
 	var buffer = new(bytes.Buffer)
 	in := 0
+	var bracket bool
 	for _, b := range code {
 		switch b {
 		case '[':
 			{
-				buffer.WriteByte('\n')
+				if !bracket {
+					buffer.WriteByte('\n')
+				}
 				writeIndents(buffer, indent, in)
 				buffer.WriteByte('[')
 				buffer.WriteByte('\n')
 				in++
-				writeIndents(buffer, indent, in)
+				bracket = true
 			}
 		case ']':
 			{
@@ -27,14 +30,20 @@ func Expand(code []byte, indent string) ([]byte, error) {
 				if in < 0 {
 					return nil, ErrMissingOpenSquareBracket
 				}
-				buffer.WriteByte('\n')
+				if !bracket {
+					buffer.WriteByte('\n')
+				}
 				writeIndents(buffer, indent, in)
 				buffer.WriteByte(']')
 				buffer.WriteByte('\n')
-				writeIndents(buffer, indent, in)
+				bracket = true
 			}
 		default:
+			if bracket {
+				writeIndents(buffer, indent, in)
+			}
 			buffer.WriteByte(b)
+			bracket = false
 		}
 	}
 	if in > 0 {
