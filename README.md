@@ -1,2 +1,4 @@
 # brainfuck
-simple brainfuck interpreter for golang
+Simple brainfuck interpreter for golang
+
+Feature works: early calculate transitions for operators '[' and ']'.
