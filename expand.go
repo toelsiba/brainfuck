@@ -28,7 +28,7 @@ func Expand(code []byte, indent string) ([]byte, error) {
 			{
 				in--
 				if in < 0 {
-					return nil, ErrMissingOpenSquareBracket
+					return nil, ErrMissingOpenBracket
 				}
 				if !bracket {
 					buffer.WriteByte('\n')
@@ -47,7 +47,7 @@ func Expand(code []byte, indent string) ([]byte, error) {
 		}
 	}
 	if in > 0 {
-		return nil, ErrMissingCloseSquareBracket
+		return nil, ErrMissingCloseBracket
 	}
 	return buffer.Bytes(), nil
 }

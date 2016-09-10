@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ErrMissingOpenSquareBracket  = errors.New("brainfuck: missing operator [")
-	ErrMissingCloseSquareBracket = errors.New("brainfuck: missing operator ]")
+	ErrMissingOpenBracket  = errors.New("brainfuck: missing operator [")
+	ErrMissingCloseBracket = errors.New("brainfuck: missing operator ]")
 )
 
 type Config struct {
@@ -17,8 +17,10 @@ type Config struct {
 	In      io.Reader
 }
 
+const RAM_SIZE_DEFAULT = 30000
+
 var Default = Config{
-	RamSize: 30000,
+	RamSize: RAM_SIZE_DEFAULT,
 	Out:     os.Stdout,
 	In:      os.Stdin,
 }
@@ -137,7 +139,7 @@ func makeJumpMaps(code []byte) (openJump, closeJump map[int]int, err error) {
 		case ']':
 			{
 				if len(is) == 0 {
-					err = ErrMissingOpenSquareBracket
+					err = ErrMissingOpenBracket
 					return
 				}
 				k := len(is) - 1
@@ -148,7 +150,7 @@ func makeJumpMaps(code []byte) (openJump, closeJump map[int]int, err error) {
 		}
 	}
 	if len(is) > 0 {
-		err = ErrMissingCloseSquareBracket
+		err = ErrMissingCloseBracket
 		return
 	}
 	return
