@@ -16,13 +16,13 @@ func newTerminal(r io.Reader, w io.Writer) *terminal {
 	}
 }
 
-func (t *terminal) putchar(b byte) error {
+func (t *terminal) putChar(b byte) error {
 	t.bs[0] = b
 	_, err := t.w.Write(t.bs)
 	return err
 }
 
-func (t *terminal) getchar() (byte, error) {
+func (t *terminal) getChar() (byte, error) {
 	_, err := t.r.Read(t.bs)
 	if err != nil {
 		return 0, err

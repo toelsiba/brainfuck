@@ -1,14 +1,8 @@
 package brainfuck
 
 import (
-	"errors"
 	"io"
 	"os"
-)
-
-var (
-	ErrMissingOpenBracket  = errors.New("brainfuck: missing operator [")
-	ErrMissingCloseBracket = errors.New("brainfuck: missing operator ]")
 )
 
 type Config struct {
@@ -17,10 +11,10 @@ type Config struct {
 	In      io.Reader
 }
 
-const RAM_SIZE_DEFAULT = 30000
+const RamSizeDefault = 30000
 
 var Default = Config{
-	RamSize: RAM_SIZE_DEFAULT,
+	RamSize: RamSizeDefault,
 	Out:     os.Stdout,
 	In:      os.Stdin,
 }
@@ -31,14 +25,13 @@ func Run(code []byte) error {
 
 func RunConfig(c Config, code []byte) error {
 
-	code = prepareOnlyCode(code)
-
 	var (
-		ram = make([]byte, c.RamSize)
-		pos int
+		ramSize = c.RamSize
+		ram     = make([]byte, ramSize)
+		pos     int
 	)
 
-	openJump, closeJump, err := makeJumpMaps(code)
+	ins, err := compileCode(code)
 	if err != nil {
 		return err
 	}
@@ -46,32 +39,40 @@ func RunConfig(c Config, code []byte) error {
 	t := newTerminal(c.In, c.Out)
 
 	i := 0
-	for n := len(code); i < n; {
-		switch b := code[i]; b {
-		case '>':
-			pos = rInc(pos, c.RamSize)
-		case '<':
-			pos = rDec(pos, c.RamSize)
-		case '+':
-			ram[pos]++
-		case '-':
-			ram[pos]--
-		case '.':
-			if err = t.putchar(ram[pos]); err != nil {
-				return err
+	for i < len(ins) {
+		var (
+			in    = ins[i]
+			param = in.Parameter
+		)
+		switch in.Op {
+		case op_Right:
+			pos = mod(pos+param, ramSize)
+		case op_Left:
+			pos = mod(pos-param, ramSize)
+		case op_Increment:
+			ram[pos] += byte(param)
+		case op_Decrement:
+			ram[pos] -= byte(param)
+		case op_PutChar:
+			for j := 0; j < param; j++ {
+				if err = t.putChar(ram[pos]); err != nil {
+					return err
+				}
 			}
-		case ',':
-			if ram[pos], err = t.getchar(); err != nil {
-				return err
+		case op_GetChar:
+			for j := 0; j < param; j++ {
+				if ram[pos], err = t.getChar(); err != nil {
+					return err
+				}
 			}
-		case '[':
+		case op_JumpIfZero:
 			if ram[pos] == 0 {
-				i = openJump[i]
+				i = param
 				continue
 			}
-		case ']':
+		case op_JumpIfNotZero:
 			if ram[pos] != 0 {
-				i = closeJump[i]
+				i = param
 				continue
 			}
 		}
@@ -81,77 +82,10 @@ func RunConfig(c Config, code []byte) error {
 	return nil
 }
 
-func byteIsOperator(b byte) bool {
-	switch b {
-	case '>', '<', '+', '-', '.', ',', '[', ']':
-		return true
-	default:
-		return false
+func mod(x, y int) int {
+	res := x % y
+	if res < 0 {
+		res += y
 	}
-}
-
-func prepareOnlyCode(code []byte) []byte {
-	var bs []byte
-	for i, b := range code {
-		if byteIsOperator(b) {
-			if bs != nil {
-				bs = append(bs, b)
-			}
-		} else {
-			if bs == nil {
-				bs = make([]byte, i)
-				if len(bs) > 0 {
-					copy(bs, code)
-				}
-			}
-		}
-	}
-	if bs != nil {
-		return bs
-	}
-	return code
-}
-
-func rInc(i int, ramSize int) int {
-	i++
-	if i == ramSize {
-		i = 0
-	}
-	return i
-}
-
-func rDec(i int, ramSize int) int {
-	i--
-	if i < 0 {
-		i = ramSize - 1
-	}
-	return i
-}
-
-func makeJumpMaps(code []byte) (openJump, closeJump map[int]int, err error) {
-	openJump = make(map[int]int)
-	closeJump = make(map[int]int)
-	var is []int
-	for i := range code {
-		switch b := code[i]; b {
-		case '[':
-			is = append(is, i)
-		case ']':
-			{
-				if len(is) == 0 {
-					err = ErrMissingOpenBracket
-					return
-				}
-				k := len(is) - 1
-				openJump[is[k]] = i + 1
-				closeJump[i] = is[k]
-				is = is[:k]
-			}
-		}
-	}
-	if len(is) > 0 {
-		err = ErrMissingCloseBracket
-		return
-	}
-	return
+	return res
 }

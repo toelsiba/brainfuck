@@ -21,7 +21,7 @@ func TestHelloWorld(t *testing.T) {
 	)
 	buffer := new(bytes.Buffer)
 	config := Config{
-		RamSize: RAM_SIZE_DEFAULT,
+		RamSize: RamSizeDefault,
 		Out:     buffer,
 		In:      zeroReader{},
 	}
@@ -30,7 +30,7 @@ func TestHelloWorld(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(buffer.Bytes(), result) {
-		t.Fatal("result is wrong")
+		t.Fatal("result is wrong:", string(buffer.Bytes()))
 	}
 }
 
@@ -55,7 +55,7 @@ func TestQuine(t *testing.T) {
 	buffer := new(bytes.Buffer)
 
 	config := Config{
-		RamSize: RAM_SIZE_DEFAULT,
+		RamSize: RamSizeDefault,
 		Out:     buffer,
 		In:      zeroReader{},
 	}
