@@ -45,14 +45,14 @@ func RunConfig(c Config, code []byte) error {
 			param = in.Parameter
 		)
 		switch in.Op {
-		case op_Right:
+		case op_IncPointer:
 			pos = mod(pos+param, ramSize)
-		case op_Left:
+		case op_DecPointer:
 			pos = mod(pos-param, ramSize)
 		case op_Increment:
-			ram[pos] += byte(param)
+			ram[pos] = byte(int(ram[pos]) + param)
 		case op_Decrement:
-			ram[pos] -= byte(param)
+			ram[pos] = byte(int(ram[pos]) - param)
 		case op_PutChar:
 			for j := 0; j < param; j++ {
 				if err = t.putChar(ram[pos]); err != nil {

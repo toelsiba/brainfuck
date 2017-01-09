@@ -13,9 +13,7 @@ import (
 )
 
 func main() {
-	//outToFile()
-	exampleEscapeSeq()
-	//testNumber()
+	exampleExpand()
 }
 
 func exampleExpand() {
@@ -108,21 +106,5 @@ func exampleEscapeSeq() {
 			y = maxY - 1
 			dy = -dy
 		}
-	}
-}
-
-func testNumber() {
-	var min byte = 120
-	b := min
-	for i := 0; i < 1000; i++ {
-
-		v := min + byte(i)
-		//v := byte(int(min) + i)
-
-		if b != v {
-			fmt.Println(b, v)
-		}
-
-		b++
 	}
 }

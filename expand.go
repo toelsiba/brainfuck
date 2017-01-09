@@ -26,7 +26,7 @@ func Expand(code []byte, indent string) ([]byte, error) {
 				in++
 				bracket = true
 			}
-		case ']':
+		case op_JumpIfNotZero:
 			{
 				in--
 				if in < 0 {
@@ -36,7 +36,7 @@ func Expand(code []byte, indent string) ([]byte, error) {
 					buffer.WriteByte('\n')
 				}
 				writeIndents(&buffer, indent, in)
-				buffer.WriteByte(']')
+				buffer.WriteByte(op_JumpIfNotZero)
 				buffer.WriteByte('\n')
 				bracket = true
 			}
@@ -85,9 +85,9 @@ func prepareOnlyCode(code []byte) []byte {
 func makeOpTable() (table [256]bool) {
 	for i := range table {
 		switch i {
-		case op_Right:
+		case op_IncPointer:
 			fallthrough
-		case op_Left:
+		case op_DecPointer:
 			fallthrough
 		case op_Increment:
 			fallthrough

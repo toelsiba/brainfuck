@@ -10,8 +10,8 @@ var (
 // Operations:
 
 const (
-	op_Right         = '>'
-	op_Left          = '<'
+	op_IncPointer    = '>'
+	op_DecPointer    = '<'
 	op_Increment     = '+'
 	op_Decrement     = '-'
 	op_PutChar       = '.'
@@ -29,10 +29,10 @@ func compileCode(code []byte) (ins []*instruction, err error) {
 
 	for _, b := range code {
 		switch b {
-		case op_Right:
-			ins = appendInstruction(ins, op_Right)
-		case op_Left:
-			ins = appendInstruction(ins, op_Left)
+		case op_IncPointer:
+			ins = appendInstruction(ins, op_IncPointer)
+		case op_DecPointer:
+			ins = appendInstruction(ins, op_DecPointer)
 		case op_Increment:
 			ins = appendInstruction(ins, op_Increment)
 		case op_Decrement:
@@ -62,32 +62,28 @@ func appendInstruction(ins []*instruction, op byte) []*instruction {
 			return ins
 		}
 	}
-	in := &instruction{
-		Op:        op,
-		Parameter: 1,
-	}
-	return append(ins, in)
+	return append(ins, &instruction{Op: op, Parameter: 1})
 }
 
 func prepareJumps(ins []*instruction) error {
-	var is []int
-	for i, in := range ins {
+	var js []int
+	for j, in := range ins {
 		switch in.Op {
 		case op_JumpIfZero:
-			is = append(is, i)
+			js = append(js, j)
 		case op_JumpIfNotZero:
-			if len(is) == 0 {
+			if len(js) == 0 {
 				return ErrMissingOpenBracket
 			}
-			k := len(is) - 1
+			k := len(js) - 1
 
-			ins[is[k]].Parameter = i + 1
-			ins[i].Parameter = is[k]
+			ins[js[k]].Parameter = j + 1
+			ins[j].Parameter = js[k]
 
-			is = is[:k]
+			js = js[:k]
 		}
 	}
-	if len(is) > 0 {
+	if len(js) > 0 {
 		return ErrMissingCloseBracket
 	}
 	return nil
