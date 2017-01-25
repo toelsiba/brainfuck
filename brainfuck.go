@@ -46,9 +46,11 @@ func RunConfig(c Config, code []byte) error {
 		)
 		switch in.Op {
 		case op_IncPointer:
-			pos = mod(pos+param, ramSize)
+			pos += param
+			// pos = mod(pos+param, ramSize) // rotate inc pointer
 		case op_DecPointer:
-			pos = mod(pos-param, ramSize)
+			pos -= param
+			// pos = mod(pos-param, ramSize) // rotate dec pointer
 		case op_Increment:
 			ram[pos] = byte(int(ram[pos]) + param)
 		case op_Decrement:

@@ -16,7 +16,7 @@ func (zeroReader) Read(p []byte) (n int, err error) {
 
 func TestHelloWorld(t *testing.T) {
 	var (
-		code   = []byte("--[+++++++<---->>-->+>+>+<<<<]<.>++++[-<++++<++>>>->--<<]>>-.>--..>+.<<<.<<-.>>+>->>.+++[.<]<<++.")
+		code   = []byte("++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.")
 		result = []byte("Hello World!\n")
 	)
 	buffer := new(bytes.Buffer)
