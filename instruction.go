@@ -10,45 +10,46 @@ var (
 // Operations:
 
 const (
-	op_IncPointer    = '>'
-	op_DecPointer    = '<'
-	op_Increment     = '+'
-	op_Decrement     = '-'
-	op_PutChar       = '.'
-	op_GetChar       = ','
-	op_JumpIfZero    = '['
-	op_JumpIfNotZero = ']'
+	opIncPointer    = '>'
+	opDecPointer    = '<'
+	opIncCell       = '+'
+	opDecCell       = '-'
+	opPutChar       = '.'
+	opGetChar       = ','
+	opJumpIfZero    = '['
+	opJumpIfNotZero = ']'
 )
 
 type instruction struct {
-	Op        byte
+	Op        byte // Operation
 	Parameter int
 }
 
-func compileCode(code []byte) (ins []*instruction, err error) {
+func makeInstructions(code []byte) (ins []*instruction, err error) {
 
 	for _, b := range code {
 		switch b {
-		case op_IncPointer:
-			ins = appendInstruction(ins, op_IncPointer)
-		case op_DecPointer:
-			ins = appendInstruction(ins, op_DecPointer)
-		case op_Increment:
-			ins = appendInstruction(ins, op_Increment)
-		case op_Decrement:
-			ins = appendInstruction(ins, op_Decrement)
-		case op_PutChar:
-			ins = appendInstruction(ins, op_PutChar)
-		case op_GetChar:
-			ins = appendInstruction(ins, op_GetChar)
-		case op_JumpIfZero:
-			ins = append(ins, &instruction{Op: op_JumpIfZero})
-		case op_JumpIfNotZero:
-			ins = append(ins, &instruction{Op: op_JumpIfNotZero})
+		case opIncPointer:
+			ins = appendInstruction(ins, opIncPointer)
+		case opDecPointer:
+			ins = appendInstruction(ins, opDecPointer)
+		case opIncCell:
+			ins = appendInstruction(ins, opIncCell)
+		case opDecCell:
+			ins = appendInstruction(ins, opDecCell)
+		case opPutChar:
+			ins = appendInstruction(ins, opPutChar)
+		case opGetChar:
+			ins = appendInstruction(ins, opGetChar)
+		case opJumpIfZero:
+			ins = append(ins, &instruction{Op: opJumpIfZero})
+		case opJumpIfNotZero:
+			ins = append(ins, &instruction{Op: opJumpIfNotZero})
 		}
 	}
 
-	if err = prepareJumps(ins); err != nil {
+	err = prepareJumps(ins)
+	if err != nil {
 		return nil, err
 	}
 
@@ -69,16 +70,16 @@ func prepareJumps(ins []*instruction) error {
 	var js []int
 	for j, in := range ins {
 		switch in.Op {
-		case op_JumpIfZero:
-			js = append(js, j)
-		case op_JumpIfNotZero:
+		case opJumpIfZero:
+			js = append(js, j) // append index of '['
+		case opJumpIfNotZero:
 			if len(js) == 0 {
 				return ErrMissingOpenBracket
 			}
-			k := len(js) - 1
+			k := len(js) - 1 // index of last '['
 
-			ins[js[k]].Parameter = j + 1
-			ins[j].Parameter = js[k]
+			ins[js[k]].Parameter = j // index of ']'
+			ins[j].Parameter = js[k] // index of '['
 
 			js = js[:k]
 		}

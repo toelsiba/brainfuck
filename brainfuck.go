@@ -26,68 +26,62 @@ func Run(code []byte) error {
 func RunConfig(c Config, code []byte) error {
 
 	var (
-		ramSize = c.RamSize
-		ram     = make([]byte, ramSize)
-		pos     int
+		cells = make([]byte, c.RamSize) // Ram
+
+		pointer = 0 // Index of cell.
 	)
 
-	ins, err := compileCode(code)
+	// Instructions
+	ins, err := makeInstructions(code)
 	if err != nil {
 		return err
 	}
 
 	t := newTerminal(c.In, c.Out)
 
-	i := 0
+	i := 0 // Index of instruction.
 	for i < len(ins) {
+
+		if (pointer < 0) || (len(cells) <= pointer) {
+			break
+		}
+
 		var (
 			in    = ins[i]
 			param = in.Parameter
 		)
 		switch in.Op {
-		case op_IncPointer:
-			pos += param
-			// pos = mod(pos+param, ramSize) // rotate inc pointer
-		case op_DecPointer:
-			pos -= param
-			// pos = mod(pos-param, ramSize) // rotate dec pointer
-		case op_Increment:
-			ram[pos] = byte(int(ram[pos]) + param)
-		case op_Decrement:
-			ram[pos] = byte(int(ram[pos]) - param)
-		case op_PutChar:
+		case opIncPointer:
+			pointer += param
+		case opDecPointer:
+			pointer -= param
+		case opIncCell:
+			cells[pointer] = byte(int(cells[pointer]) + param)
+		case opDecCell:
+			cells[pointer] = byte(int(cells[pointer]) - param)
+		case opPutChar:
 			for j := 0; j < param; j++ {
-				if err = t.putChar(ram[pos]); err != nil {
+				if err = t.putChar(cells[pointer]); err != nil {
 					return err
 				}
 			}
-		case op_GetChar:
+		case opGetChar:
 			for j := 0; j < param; j++ {
-				if ram[pos], err = t.getChar(); err != nil {
+				if cells[pointer], err = t.getChar(); err != nil {
 					return err
 				}
 			}
-		case op_JumpIfZero:
-			if ram[pos] == 0 {
+		case opJumpIfZero:
+			if cells[pointer] == 0 {
 				i = param
-				continue
 			}
-		case op_JumpIfNotZero:
-			if ram[pos] != 0 {
+		case opJumpIfNotZero:
+			if cells[pointer] != 0 {
 				i = param
-				continue
 			}
 		}
 		i++
 	}
 
 	return nil
-}
-
-func mod(x, y int) int {
-	res := x % y
-	if res < 0 {
-		res += y
-	}
-	return res
 }
