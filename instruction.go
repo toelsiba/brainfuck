@@ -10,14 +10,14 @@ var (
 // Operations:
 
 const (
-	opIncPointer    = '>'
-	opDecPointer    = '<'
-	opIncCell       = '+'
-	opDecCell       = '-'
-	opPutChar       = '.'
-	opGetChar       = ','
-	opJumpIfZero    = '['
-	opJumpIfNotZero = ']'
+	opIncPointer = iota
+	opDecPointer
+	opIncCell
+	opDecCell
+	opPutChar
+	opGetChar
+	opJumpIfZero
+	opJumpIfNotZero
 )
 
 type instruction struct {
@@ -29,21 +29,21 @@ func makeInstructions(code []byte) (ins []*instruction, err error) {
 
 	for _, b := range code {
 		switch b {
-		case opIncPointer:
+		case '>':
 			ins = appendInstruction(ins, opIncPointer)
-		case opDecPointer:
+		case '<':
 			ins = appendInstruction(ins, opDecPointer)
-		case opIncCell:
+		case '+':
 			ins = appendInstruction(ins, opIncCell)
-		case opDecCell:
+		case '-':
 			ins = appendInstruction(ins, opDecCell)
-		case opPutChar:
+		case '.':
 			ins = appendInstruction(ins, opPutChar)
-		case opGetChar:
+		case ',':
 			ins = appendInstruction(ins, opGetChar)
-		case opJumpIfZero:
+		case '[':
 			ins = append(ins, &instruction{Op: opJumpIfZero})
-		case opJumpIfNotZero:
+		case ']':
 			ins = append(ins, &instruction{Op: opJumpIfNotZero})
 		}
 	}

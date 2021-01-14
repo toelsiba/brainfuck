@@ -28,59 +28,61 @@ func RunConfig(c Config, code []byte) error {
 	var (
 		cells = make([]byte, c.RamSize) // Ram
 
-		pointer = 0 // Index of cell.
+		cellPointer = 0 // Index of cell.
 	)
 
 	// Instructions
-	ins, err := makeInstructions(code)
+	instructions, err := makeInstructions(code)
 	if err != nil {
 		return err
 	}
 
 	t := newTerminal(c.In, c.Out)
 
-	i := 0 // Index of instruction.
-	for i < len(ins) {
+	for i := 0; i < len(instructions); i++ {
 
-		if (pointer < 0) || (len(cells) <= pointer) {
+		if (cellPointer < 0) || (len(cells) <= cellPointer) {
 			break
 		}
 
 		var (
-			in    = ins[i]
-			param = in.Parameter
+			instruction = instructions[i]
+			param       = instruction.Parameter
 		)
-		switch in.Op {
+		switch instruction.Op {
 		case opIncPointer:
-			pointer += param
+			cellPointer += param
 		case opDecPointer:
-			pointer -= param
+			cellPointer -= param
 		case opIncCell:
-			cells[pointer] = byte(int(cells[pointer]) + param)
+			cells[cellPointer] = byte(int(cells[cellPointer]) + param)
 		case opDecCell:
-			cells[pointer] = byte(int(cells[pointer]) - param)
+			cells[cellPointer] = byte(int(cells[cellPointer]) - param)
 		case opPutChar:
 			for j := 0; j < param; j++ {
-				if err = t.putChar(cells[pointer]); err != nil {
+				b := cells[cellPointer]
+				err := t.WriteByte(b)
+				if err != nil {
 					return err
 				}
 			}
 		case opGetChar:
 			for j := 0; j < param; j++ {
-				if cells[pointer], err = t.getChar(); err != nil {
+				b, err := t.ReadByte()
+				if err != nil {
 					return err
 				}
+				cells[cellPointer] = b
 			}
 		case opJumpIfZero:
-			if cells[pointer] == 0 {
+			if cells[cellPointer] == 0 {
 				i = param
 			}
 		case opJumpIfNotZero:
-			if cells[pointer] != 0 {
+			if cells[cellPointer] != 0 {
 				i = param
 			}
 		}
-		i++
 	}
 
 	return nil
