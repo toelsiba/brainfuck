@@ -1,9 +1,13 @@
 package brainfuck
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 )
+
+var ErrPointer = errors.New("cell pointer out of range")
 
 type Config struct {
 	RamSize int
@@ -25,10 +29,14 @@ func Run(code []byte) error {
 
 func RunConfig(c Config, code []byte) error {
 
+	if c.RamSize <= 0 {
+		return fmt.Errorf("Invalid cells size %d", c.RamSize)
+	}
+
 	var (
 		cells = make([]byte, c.RamSize) // Ram
 
-		cellPointer = 0 // Index of cell.
+		pointer = 0 // Index of cell.
 	)
 
 	// Instructions
@@ -37,49 +45,65 @@ func RunConfig(c Config, code []byte) error {
 		return err
 	}
 
-	t := newTerminal(c.In, c.Out)
+	var brw byteReadWriter
+	brw = newTerminal(c.In, c.Out)
 
 	for i := 0; i < len(instructions); i++ {
-
-		if (cellPointer < 0) || (len(cells) <= cellPointer) {
-			break
-		}
 
 		var (
 			instruction = instructions[i]
 			param       = instruction.Parameter
 		)
+
 		switch instruction.Op {
+
 		case opIncPointer:
-			cellPointer += param
+			{
+				pointer += param
+				if pointer >= len(cells) {
+					return ErrPointer
+				}
+			}
+
 		case opDecPointer:
-			cellPointer -= param
+			{
+				pointer -= param
+				if pointer < 0 {
+					return ErrPointer
+				}
+			}
+
 		case opIncCell:
-			cells[cellPointer] = byte(int(cells[cellPointer]) + param)
+			cells[pointer] = byte(int(cells[pointer]) + param)
+
 		case opDecCell:
-			cells[cellPointer] = byte(int(cells[cellPointer]) - param)
+			cells[pointer] = byte(int(cells[pointer]) - param)
+
 		case opPutChar:
 			for j := 0; j < param; j++ {
-				b := cells[cellPointer]
-				err := t.WriteByte(b)
+				b := cells[pointer]
+				err := brw.WriteByte(b)
 				if err != nil {
 					return err
 				}
 			}
+
 		case opGetChar:
 			for j := 0; j < param; j++ {
-				b, err := t.ReadByte()
+				b, err := brw.ReadByte()
 				if err != nil {
 					return err
 				}
-				cells[cellPointer] = b
+				cells[pointer] = b
 			}
+
 		case opJumpIfZero:
-			if cells[cellPointer] == 0 {
+			if cells[pointer] == 0 {
 				i = param
 			}
+
 		case opJumpIfNotZero:
-			if cells[cellPointer] != 0 {
+			if cells[pointer] != 0 {
 				i = param
 			}
 		}

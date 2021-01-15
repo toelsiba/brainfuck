@@ -2,6 +2,11 @@ package brainfuck
 
 import "io"
 
+type byteReadWriter interface {
+	io.ByteReader
+	io.ByteWriter
+}
+
 type terminal struct {
 	buf []byte
 
@@ -17,19 +22,7 @@ func newTerminal(r io.Reader, w io.Writer) *terminal {
 	}
 }
 
-func _() {
-	t := new(terminal)
-	var (
-		_ io.ByteReader = t
-		_ io.ByteWriter = t
-	)
-}
-
-func (t *terminal) WriteByte(b byte) error {
-	t.buf[0] = b
-	_, err := t.w.Write(t.buf)
-	return err
-}
+var _ byteReadWriter = &terminal{}
 
 func (t *terminal) ReadByte() (byte, error) {
 	_, err := t.r.Read(t.buf)
@@ -37,4 +30,10 @@ func (t *terminal) ReadByte() (byte, error) {
 		return 0, err
 	}
 	return t.buf[0], nil
+}
+
+func (t *terminal) WriteByte(b byte) error {
+	t.buf[0] = b
+	_, err := t.w.Write(t.buf)
+	return err
 }

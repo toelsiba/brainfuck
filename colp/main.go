@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -17,15 +18,33 @@ func main() {
 }
 
 func exampleExpand() {
-	data, err := ioutil.ReadFile("../src/factorial.bf")
+
+	var (
+		//filename = "../src/factorial.bf"
+		//filename = "../src/mandelbrot.bf"
+		//filename = "../src/life.bf"
+		//filename = "../src/hanoi.bf"
+		filename = "../src/wiki_rot13.bf"
+	)
+
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
+	//data = brainfuck.OnlyCode(data)
 	code, err := brainfuck.Expand(data, "    ")
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(string(code))
+
+	var (
+		c1 = brainfuck.OnlyCode(data)
+		c2 = brainfuck.OnlyCode(code)
+	)
+	if !bytes.Equal(c1, c2) {
+		log.Fatal("Collapse-Expand error")
+	}
 }
 
 func outToFile() {

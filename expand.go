@@ -2,31 +2,45 @@ package brainfuck
 
 import "bytes"
 
-var tableByteIsOp = makeOpTable()
+var tableByteIsOperation = [256]bool{
+	'>': true,
+	'<': true,
+	'+': true,
+	'-': true,
+	'.': true,
+	',': true,
+	'[': true,
+	']': true,
+}
 
-func Collapse(code []byte) []byte {
-	return prepareOnlyCode(code)
+func OnlyCode(code []byte) []byte {
+	bs := make([]byte, 0, len(code))
+	for _, b := range code {
+		if tableByteIsOperation[b] {
+			bs = append(bs, b)
+		}
+	}
+	return bs
 }
 
 func Expand(code []byte, indent string) ([]byte, error) {
-	code = prepareOnlyCode(code)
 	var buffer bytes.Buffer
 	in := 0
 	var bracket bool
 	for _, b := range code {
 		switch b {
-		case opJumpIfZero:
+		case '[':
 			{
 				if !bracket {
 					buffer.WriteByte('\n')
 				}
 				writeIndents(&buffer, indent, in)
-				buffer.WriteByte(opJumpIfZero)
+				buffer.WriteByte('[')
 				buffer.WriteByte('\n')
 				in++
 				bracket = true
 			}
-		case opJumpIfNotZero:
+		case ']':
 			{
 				in--
 				if in < 0 {
@@ -36,7 +50,7 @@ func Expand(code []byte, indent string) ([]byte, error) {
 					buffer.WriteByte('\n')
 				}
 				writeIndents(&buffer, indent, in)
-				buffer.WriteByte(opJumpIfNotZero)
+				buffer.WriteByte(']')
 				buffer.WriteByte('\n')
 				bracket = true
 			}
@@ -54,54 +68,8 @@ func Expand(code []byte, indent string) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func writeIndents(buffer *bytes.Buffer, indent string, n int) {
+func writeIndents(b *bytes.Buffer, indent string, n int) {
 	for i := 0; i < n; i++ {
-		buffer.WriteString(indent)
+		b.WriteString(indent)
 	}
-}
-
-func prepareOnlyCode(code []byte) []byte {
-	var bs []byte
-	for i, b := range code {
-		if tableByteIsOp[b] {
-			if bs != nil {
-				bs = append(bs, b)
-			}
-		} else {
-			if bs == nil {
-				bs = make([]byte, i)
-				if len(bs) > 0 {
-					copy(bs, code)
-				}
-			}
-		}
-	}
-	if bs != nil {
-		return bs
-	}
-	return code
-}
-
-func makeOpTable() (table [256]bool) {
-	for i := range table {
-		switch i {
-		case opIncPointer:
-			fallthrough
-		case opDecPointer:
-			fallthrough
-		case opIncCell:
-			fallthrough
-		case opDecCell:
-			fallthrough
-		case opPutChar:
-			fallthrough
-		case opGetChar:
-			fallthrough
-		case opJumpIfZero:
-			fallthrough
-		case opJumpIfNotZero:
-			table[i] = true
-		}
-	}
-	return
 }

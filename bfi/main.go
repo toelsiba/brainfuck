@@ -14,10 +14,13 @@ func main() {
 	}
 	fileName := os.Args[1]
 	data, err := ioutil.ReadFile(fileName)
+	checkError(err)
+	err = brainfuck.Run(data)
+	checkError(err)
+}
+
+func checkError(err error) {
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err = brainfuck.Run(data); err != nil {
 		log.Fatal(err)
 	}
 }
